@@ -16,7 +16,6 @@ import ChartCard from '../../components/dashboard/ChartCard';
 import { attendance } from '../../mock-data/attendance';
 import { leaves } from '../../mock-data/leaves';
 import { shiftDefinitions, shiftSchedules } from '../../mock-data/shifts';
-import { timesheets } from '../../mock-data/timesheets';
 import { formatDate, formatTime } from '../../utils/helpers';
 
 const COLORS = { emerald: '#10B981', amber: '#F59E0B', red: '#EF4444', blue: '#3B82F6' };
@@ -80,13 +79,6 @@ export default function EmployeeDashboard() {
     [employeeId]
   );
 
-  const myTimesheet = useMemo(
-    () => timesheets
-      .filter((t) => t.employeeId === employeeId)
-      .sort((a, b) => b.weekEnd.localeCompare(a.weekEnd))[0] || null,
-    [employeeId]
-  );
-
   // Last 10 working days -> hours per day, for the chart
   const chartData = useMemo(() => {
     return myAttendance.slice(-10).map((a) => {
@@ -131,10 +123,10 @@ export default function EmployeeDashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard label="Hours This Week" value={`${hoursThisWeek.toFixed(1)}h`} icon={Hourglass} accent="blue" />
-        <KpiCard label="Leave Balance" value={`${leaveBalance} days`} icon={CalendarCheck} accent="emerald" />
-        <KpiCard label="Attendance Rate" value={`${attendanceRate}%`} icon={CalendarDays} accent="purple" />
-        <KpiCard label="Pending Requests" value={pendingCount} icon={Clock} accent="amber" />
+        <KpiCard label="Hours This Week" value={`${hoursThisWeek.toFixed(1)}h`} icon={Hourglass} accent="blue" noBar />
+        <KpiCard label="Leave Balance" value={`${leaveBalance} days`} icon={CalendarCheck} accent="emerald" noBar />
+        <KpiCard label="Attendance Rate" value={`${attendanceRate}%`} icon={CalendarDays} accent="purple" noBar />
+        <KpiCard label="Pending Requests" value={pendingCount} icon={Clock} accent="amber" noBar />
       </div>
 
       {/* Attendance chart + My Schedule */}
@@ -184,40 +176,6 @@ export default function EmployeeDashboard() {
           </div>
         </div>
       </div>
-
-      {/* My Timesheet */}
-      {myTimesheet && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-gray-900 tracking-tight">My Timesheet</h3>
-                <Badge variant={myTimesheet.status === 'Approved' ? 'success' : myTimesheet.status === 'Submitted' ? 'warning' : 'default'} size="xs">
-                  {myTimesheet.status}
-                </Badge>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                {formatDate(myTimesheet.weekStart)} – {formatDate(myTimesheet.weekEnd)}
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-5 sm:gap-8">
-              <div>
-                <p className="text-[11px] text-gray-400">Regular</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">{Number(myTimesheet.regularHours || 0).toFixed(1)}h</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-gray-400">Overtime</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">{Number(myTimesheet.overtimeHours || 0).toFixed(1)}h</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-gray-400">Total</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">{Number(myTimesheet.totalHours || 0).toFixed(1)}h</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/my-timesheet')}>View Timesheet</Button>
-          </div>
-        </div>
-      )}
 
       {/* My Leave Requests + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

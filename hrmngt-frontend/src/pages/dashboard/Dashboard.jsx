@@ -141,7 +141,7 @@ export default function Dashboard() {
       {/* Row 1: KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {kpiData.map((card) => (
-          <KpiCard key={card.labelKey} {...card} label={t(card.labelKey)} changeLabel={t('dashboard.vsLastWeek')} />
+          <KpiCard key={card.labelKey} {...card} label={t(card.labelKey)} changeLabel={t('dashboard.vsLastWeek')} noBar />
         ))}
       </div>
 

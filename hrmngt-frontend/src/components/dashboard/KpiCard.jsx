@@ -9,7 +9,7 @@ const accentStyles = {
   purple: { iconBg: 'bg-purple-50', iconText: 'text-purple-600', bar: 'bg-purple-500' },
 };
 
-export default function KpiCard({ label, value, icon: Icon, change, changeType, accent = 'blue', changeLabel = 'vs last week' }) {
+export default function KpiCard({ label, value, icon: Icon, change, changeType, accent = 'blue', changeLabel = 'vs last week', noBar = false }) {
   const style = accentStyles[accent] || accentStyles.blue;
   const isPositive = changeType === 'increase';
 
@@ -40,7 +40,7 @@ export default function KpiCard({ label, value, icon: Icon, change, changeType, 
           <Icon className={clsx('w-5 h-5', style.iconText)} />
         </div>
       </div>
-      <div className={clsx('absolute bottom-0 left-0 right-0 h-[3px]', style.bar)} />
+      {!noBar && <div className={clsx('absolute bottom-0 left-0 right-0 h-[3px]', style.bar)} />}
     </div>
   );
 }

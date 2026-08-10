@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText,
   CalendarDays, BarChart3, FileBarChart, Settings,
   Briefcase, LogOut, AlertTriangle, Fingerprint, CalendarClock, FileClock,
-  UserPlus
+  UserPlus, Brain
 } from 'lucide-react';
 import clsx from 'clsx';
 import Avatar from '../ui/Avatar';
@@ -23,6 +23,7 @@ const adminMenuItems = [
   { path: '/timesheets', key: 'nav.timesheets', icon: FileText },
   { path: '/leave', key: 'nav.leave', icon: Calendar },
   { path: '/analytics', key: 'nav.analytics', icon: BarChart3 },
+  { path: '/ai-decision-support', key: 'nav.aiDecisionSupport', icon: Brain },
   { path: '/reports', key: 'nav.reports', icon: FileBarChart },
   { path: '/settings', key: 'nav.settings', icon: Settings },
 ];

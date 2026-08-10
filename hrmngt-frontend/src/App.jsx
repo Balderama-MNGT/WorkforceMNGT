@@ -17,6 +17,7 @@ import Shifts from './pages/shifts/Shifts';
 import Timesheets from './pages/timesheets/Timesheets';
 import Leave from './pages/leave/Leave';
 import Analytics from './pages/analytics/Analytics';
+import AIDecisionSupport from './pages/ai/AIDecisionSupport';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 import MyAttendance from './pages/attendance/MyAttendance';
@@ -49,6 +50,7 @@ function AppRoutes() {
       <Route path="/my-attendance" element={<PrivateLayout><MyAttendance /></PrivateLayout>} />
       <Route path="/my-schedule" element={<PrivateLayout><MySchedule /></PrivateLayout>} />
       <Route path="/analytics" element={<PrivateLayout adminOnly><Analytics /></PrivateLayout>} />
+      <Route path="/ai-decision-support" element={<PrivateLayout adminOnly><AIDecisionSupport /></PrivateLayout>} />
       <Route path="/reports" element={<PrivateLayout adminOnly><Reports /></PrivateLayout>} />
       <Route path="/settings" element={<PrivateLayout><Settings /></PrivateLayout>} />
 

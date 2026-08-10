@@ -11,6 +11,7 @@ const translations = {
     'nav.timesheets': 'Timesheet Management',
     'nav.leave': 'Leave Management',
     'nav.analytics': 'Workforce Analytics',
+    'nav.aiDecisionSupport': 'AI Decision Support',
     'nav.reports': 'Reports',
     'nav.settings': 'Settings',
 
@@ -77,6 +78,11 @@ const translations = {
     'reports.title': 'Reports',
     'reports.subtitle': 'Generate and download workforce reports',
 
+    // AI Decision Support
+    'aiDecisionSupport.title': 'AI Decision Support',
+    'aiDecisionSupport.subtitle': 'Intelligent insights and recommendations for workforce decisions',
+    'aiDecisionSupport.underDevelopment': 'This module is currently under development.',
+
     // Settings
     'settings.title': 'Settings',
     'settings.subtitle': 'Manage your application preferences',
@@ -98,6 +104,7 @@ const translations = {
     'nav.timesheets': 'Pamamahala ng Timesheet',
     'nav.leave': 'Pamamahala ng Leave',
     'nav.analytics': 'Analytics ng Workforce',
+    'nav.aiDecisionSupport': 'Suporta sa Desisyon ng AI',
     'nav.reports': 'Mga Ulat',
     'nav.settings': 'Mga Setting',
 
@@ -149,6 +156,10 @@ const translations = {
     'reports.title': 'Mga Ulat',
     'reports.subtitle': 'Lumikha at mag-download ng mga ulat sa workforce',
 
+    'aiDecisionSupport.title': 'Suporta sa Desisyon ng AI',
+    'aiDecisionSupport.subtitle': 'Matalinong insight at rekomendasyon para sa mga desisyon ng workforce',
+    'aiDecisionSupport.underDevelopment': 'Ang modyul na ito ay kasalukuyang ginagawa.',
+
     'settings.title': 'Mga Setting',
     'settings.subtitle': 'Pamahalaan ang mga kagustuhan ng application',
     'settings.company': 'Impormasyon ng Kompanya',
@@ -169,6 +180,7 @@ const translations = {
     'nav.timesheets': 'タイムシート管理',
     'nav.leave': '休暇管理',
     'nav.analytics': '人材分析',
+    'nav.aiDecisionSupport': 'AI意思決定サポート',
     'nav.reports': 'レポート',
     'nav.settings': '設定',
 
@@ -220,6 +232,10 @@ const translations = {
     'reports.title': 'レポート',
     'reports.subtitle': 'レポートを作成・ダウンロード',
 
+    'aiDecisionSupport.title': 'AI意思決定サポート',
+    'aiDecisionSupport.subtitle': 'ワークフォースの意思決定を支援するスマートな洞察と推奨事項',
+    'aiDecisionSupport.underDevelopment': 'このモジュールは現在開発中です。',
+
     'settings.title': '設定',
     'settings.subtitle': 'アプリケーション設定を管理',
     'settings.company': '会社情報',
@@ -240,6 +256,7 @@ const translations = {
     'nav.timesheets': '工时管理',
     'nav.leave': '休假管理',
     'nav.analytics': '人力分析',
+    'nav.aiDecisionSupport': 'AI 决策支持',
     'nav.reports': '报告',
     'nav.settings': '设置',
 
@@ -291,6 +308,10 @@ const translations = {
     'reports.title': '报告',
     'reports.subtitle': '生成和下载人力报告',
 
+    'aiDecisionSupport.title': 'AI 决策支持',
+    'aiDecisionSupport.subtitle': '为人力决策提供智能洞察与建议',
+    'aiDecisionSupport.underDevelopment': '此模块目前正在开发中。',
+
     'settings.title': '设置',
     'settings.subtitle': '管理应用程序偏好',
     'settings.company': '公司信息',
@@ -311,6 +332,7 @@ const translations = {
     'nav.timesheets': 'Gestión de Horas',
     'nav.leave': 'Gestión de Permisos',
     'nav.analytics': 'Análisis de Personal',
+    'nav.aiDecisionSupport': 'Soporte de Decisiones con IA',
     'nav.reports': 'Informes',
     'nav.settings': 'Configuración',
 
@@ -361,6 +383,10 @@ const translations = {
     'analytics.subtitle': 'Información completa sobre el rendimiento del personal',
     'reports.title': 'Informes',
     'reports.subtitle': 'Genera y descarga informes del personal',
+
+    'aiDecisionSupport.title': 'Soporte de Decisiones con IA',
+    'aiDecisionSupport.subtitle': 'Información y recomendaciones inteligentes para decisiones sobre el personal',
+    'aiDecisionSupport.underDevelopment': 'Este módulo se encuentra actualmente en desarrollo.',
 
     'settings.title': 'Configuración',
     'settings.subtitle': 'Gestiona las preferencias de la aplicación',
