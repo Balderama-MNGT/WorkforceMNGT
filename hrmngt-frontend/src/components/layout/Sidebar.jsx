@@ -80,8 +80,8 @@ export default function Sidebar({ isOpen, onClose }) {
             <Briefcase className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-[15px] leading-tight tracking-tight">WorkForce</h1>
-            <p className="text-blue-300/60 text-[11px] font-medium">Pro Management</p>
+            <h1 className="font-bold text-lg leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
+            <p className="text-blue-300 text-[11px] font-medium uppercase tracking-[0.25em]">INCORPORATED</p>
           </div>
         </div>
 

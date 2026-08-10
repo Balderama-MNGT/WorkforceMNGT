@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import clsx from 'clsx';
 import {
   Briefcase, ScanFace, LogIn, LogOut, CheckCircle2, Loader2,
   ChevronRight, ArrowLeft, UserCheck, Clock, CalendarDays,
+  Lock, Delete, BadgeCheck,
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -22,7 +24,9 @@ import { ATTENDANCE_CONFIG } from '../../utils/attendanceConfig';
 export default function AttendanceTerminal() {
   const { toast } = useToast();
 
-  const [phase, setPhase] = useState('idle');
+  const [phase, setPhase] = useState('pin');
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [employee, setEmployee] = useState(null);
   const [todayRecord, setTodayRecord] = useState(null);
@@ -30,6 +34,7 @@ export default function AttendanceTerminal() {
   const [recordedType, setRecordedType] = useState(null);
   const [recordedAt, setRecordedAt] = useState(null);
   const [showVerification, setShowVerification] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const resetTimer = useRef(null);
 
@@ -44,6 +49,9 @@ export default function AttendanceTerminal() {
   const resetToIdle = () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
     setPhase('idle');
+    setPin('');
+    setPinError('');
+    setFaceVerified(false);
     setEmployeeId('');
     setEmployee(null);
     setTodayRecord(null);
@@ -55,6 +63,28 @@ export default function AttendanceTerminal() {
   const scheduleReset = () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
     resetTimer.current = setTimeout(resetToIdle, 5000);
+  };
+
+  const appendPin = (digit) => {
+    setPinError('');
+    if (pin.length >= 4) return;
+    const next = pin + digit;
+    setPin(next);
+    if (next.length === 4) {
+      setTimeout(() => {
+        if (next === ATTENDANCE_CONFIG.terminalPin) {
+          setPhase('idle');
+        } else {
+          setPinError('Incorrect PIN. Please try again.');
+          setPin('');
+        }
+      }, 150);
+    }
+  };
+
+  const handleBackspace = () => {
+    setPinError('');
+    setPin((prev) => prev.slice(0, -1));
   };
 
   const handleContinue = async (e) => {
@@ -69,6 +99,12 @@ export default function AttendanceTerminal() {
 
       if (!found) {
         toast.error('Employee not found', `No employee matches ID "${id}". Please try again.`);
+        resetToIdle();
+        return;
+      }
+
+      if (found.status !== 'Active') {
+        toast.error('Employee inactive', `${found.firstName} ${found.lastName} is not marked as active and cannot use the terminal.`);
         resetToIdle();
         return;
       }
@@ -146,7 +182,27 @@ export default function AttendanceTerminal() {
 
   const handleVerificationComplete = () => {
     setShowVerification(false);
-    handleConfirm();
+    setFaceVerified(true);
+  };
+
+  const handleVerificationCancel = () => {
+    setShowVerification(false);
+    resetToIdle();
+  };
+
+  const lockTerminal = () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setShowVerification(false);
+    setPhase('pin');
+    setPin('');
+    setPinError('');
+    setFaceVerified(false);
+    setEmployeeId('');
+    setEmployee(null);
+    setTodayRecord(null);
+    setAction(null);
+    setRecordedType(null);
+    setRecordedAt(null);
   };
 
   const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -161,17 +217,28 @@ export default function AttendanceTerminal() {
             <Briefcase className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-[15px] leading-tight tracking-tight">WorkForce Pro</h1>
-            <p className="text-blue-300/60 text-[11px] font-medium">Attendance Terminal</p>
+            <h1 className="font-bold text-xl leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-blue-300">INCORPORATED</p>
           </div>
         </div>
-        <Link
-          to="/attendance"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-200/70 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={lockTerminal}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-200/70 hover:text-white transition-colors"
+          >
+            <Lock className="w-4 h-4" />
+            Lock Terminal
+          </button>
+          <span className="text-blue-300/40 text-sm">·</span>
+          <Link
+            to="/attendance"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-200/70 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
+        </div>
       </header>
 
       {/* Live clock */}
@@ -183,6 +250,65 @@ export default function AttendanceTerminal() {
       {/* Center content */}
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-10">
         <div className="w-full max-w-2xl">
+          {phase === 'pin' && (
+            <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center">
+                  <Lock className="w-8 h-8 text-blue-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mt-4">Attendance Terminal</h2>
+                <p className="text-gray-500 mt-1.5">Enter the terminal PIN to begin</p>
+              </div>
+
+              <div className="mt-8 flex items-center justify-center gap-3">
+                {[0, 1, 2, 3].map((index) => (
+                  <div
+                    key={index}
+                    className={clsx(
+                      'w-4 h-4 rounded-full transition-all duration-200',
+                      index < pin.length ? 'bg-blue-600 scale-110' : 'bg-gray-200'
+                    )}
+                  />
+                ))}
+              </div>
+
+              {pinError && (
+                <p className="mt-4 text-center text-sm font-medium text-red-600">{pinError}</p>
+              )}
+
+              <div className="mt-8 mx-auto max-w-[280px] grid grid-cols-3 gap-3">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                  <button
+                    key={digit}
+                    type="button"
+                    onClick={() => appendPin(String(digit))}
+                    className="h-16 rounded-2xl border border-gray-200 bg-gray-50 text-2xl font-bold text-gray-900 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all active:scale-95"
+                  >
+                    {digit}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => appendPin('0')}
+                  className="h-16 rounded-2xl border border-gray-200 bg-gray-50 text-2xl font-bold text-gray-900 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all active:scale-95"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBackspace}
+                  className="h-16 rounded-2xl border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center"
+                >
+                  <Delete className="w-6 h-6" />
+                </button>
+              </div>
+
+              <p className="mt-6 text-center text-xs text-gray-400">
+                For this demonstration, the terminal PIN is {ATTENDANCE_CONFIG.terminalPin}.
+              </p>
+            </div>
+          )}
+
           {phase === 'idle' && (
             <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
               <div className="text-center">
@@ -280,32 +406,62 @@ export default function AttendanceTerminal() {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              {faceVerified ? (
+                <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                      <BadgeCheck className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">✓ Face Verified</p>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        Identity confirmed. You can now record your {action === 'clock-in' ? 'clock in' : 'clock out'}.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-8 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 text-center">
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-blue-100 flex items-center justify-center">
+                    <ScanFace className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900 mt-3">Facial recognition required</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    You must complete facial verification before you can {action === 'clock-in' ? 'clock in' : 'clock out'}.
+                  </p>
+                  <Button
+                    size="lg"
+                    className="mt-5 w-full sm:w-auto"
+                    icon={ScanFace}
+                    onClick={() => setShowVerification(true)}
+                  >
+                    Scan Face
+                  </Button>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <Button
                   variant="outline"
                   size="lg"
                   className="flex-1"
-                  icon={ScanFace}
-                  onClick={() => setShowVerification(true)}
+                  icon={ArrowLeft}
+                  onClick={resetToIdle}
                 >
-                  Scan Face
+                  Back
                 </Button>
-                <Button
-                  size="lg"
-                  className="flex-1"
-                  variant={action === 'clock-out' ? 'danger' : 'primary'}
-                  icon={action === 'clock-in' ? LogIn : LogOut}
-                  onClick={handleConfirm}
-                >
-                  Confirm {action === 'clock-in' ? 'Clock In' : 'Clock Out'}
-                </Button>
+                {faceVerified && (
+                  <Button
+                    size="lg"
+                    className="flex-1"
+                    variant={action === 'clock-out' ? 'danger' : 'primary'}
+                    icon={action === 'clock-in' ? LogIn : LogOut}
+                    onClick={handleConfirm}
+                  >
+                    {action === 'clock-in' ? 'Clock In' : 'Clock Out'}
+                  </Button>
+                )}
               </div>
-              <button
-                onClick={resetToIdle}
-                className="mt-5 w-full text-center text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                Cancel and go back
-              </button>
             </div>
           )}
 
@@ -381,7 +537,7 @@ export default function AttendanceTerminal() {
         isOpen={showVerification}
         employeeName={employee ? `${employee.firstName} ${employee.lastName}` : ''}
         onComplete={handleVerificationComplete}
-        onClose={() => setShowVerification(false)}
+        onClose={handleVerificationCancel}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import {
   X, ScanFace, Camera, Scan, Fingerprint, UserCheck, ShieldCheck,
-  Loader2, AlertTriangle, VideoOff, RefreshCw, BadgeCheck, CheckCircle2,
+  Loader2, AlertTriangle, VideoOff, RefreshCw, BadgeCheck, CheckCircle2, ArrowLeft,
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
@@ -101,9 +101,11 @@ export default function FaceRecognitionModal({ isOpen, employeeName, onComplete,
 
       setResult(verification);
       setPhase('result');
-      completeTimer = setTimeout(() => {
-        if (!cancelled) onCompleteRef.current(verification);
-      }, 1200);
+      if (verification.status === 'Verified') {
+        completeTimer = setTimeout(() => {
+          if (!cancelled) onCompleteRef.current(verification);
+        }, 1200);
+      }
     };
 
     run();
@@ -201,11 +203,19 @@ export default function FaceRecognitionModal({ isOpen, employeeName, onComplete,
                       <div className="absolute left-8 right-8 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-scanline" />
                     </>
                   )}
-                  {phase === 'result' && result && (
+                  {phase === 'result' && result && result.status === 'Verified' && (
                     <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/15">
                       <div className="flex flex-col items-center gap-2 text-emerald-300">
                         <BadgeCheck className="w-14 h-14 drop-shadow-lg" />
                         <p className="text-xs font-semibold tracking-wide">Identity Confirmed</p>
+                      </div>
+                    </div>
+                  )}
+                  {phase === 'result' && result && result.status === 'Failed' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-500/15">
+                      <div className="flex flex-col items-center gap-2 text-red-300">
+                        <AlertTriangle className="w-14 h-14 drop-shadow-lg" />
+                        <p className="text-xs font-semibold tracking-wide">Verification Failed</p>
                       </div>
                     </div>
                   )}
@@ -267,7 +277,31 @@ export default function FaceRecognitionModal({ isOpen, employeeName, onComplete,
                 </div>
               )}
 
-              {phase === 'result' && result && (
+              {phase === 'result' && result && result.status === 'Failed' && (
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/60 p-5 animate-fadeIn">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Verification Failed</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{result.reason || 'Face could not be verified.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <Button variant="outline" className="flex-1" icon={ArrowLeft} onClick={handleClose}>
+                      Back
+                    </Button>
+                    <Button variant="primary" className="flex-1" icon={RefreshCw} onClick={handleRetry}>
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {phase === 'result' && result && result.status === 'Verified' && (
                 <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 animate-fadeIn">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">

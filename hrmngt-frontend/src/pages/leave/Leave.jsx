@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus, Users } from 'lucide-react';
 import Card from '../../components/ui/Card';
+import KpiCard from '../../components/dashboard/KpiCard';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Avatar from '../../components/ui/Avatar';
@@ -27,13 +28,6 @@ const leaveTypeVariant = {
   Special: 'purple',
   'Half Day': 'default',
 };
-
-const leaveBalances = [
-  { type: 'Vacation Leave', remaining: 15, total: 20, color: 'bg-blue-500', barBg: 'bg-blue-100', text: 'text-blue-600' },
-  { type: 'Sick Leave', remaining: 10, total: 10, color: 'bg-red-500', barBg: 'bg-red-100', text: 'text-red-600' },
-  { type: 'Emergency Leave', remaining: 5, total: 5, color: 'bg-amber-500', barBg: 'bg-amber-100', text: 'text-amber-600' },
-  { type: 'Special Leave', remaining: 3, total: 5, color: 'bg-purple-500', barBg: 'bg-purple-100', text: 'text-purple-600' },
-];
 
 const allTabs = ['All Requests', 'Pending Approvals'];
 const leaveTypes = ['Vacation', 'Sick', 'Emergency', 'Special'];
@@ -88,6 +82,16 @@ export default function Leave() {
   const paginated = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE);
 
   const pendingCount = useMemo(() => leaves.filter((l) => l.status === 'Pending').length, [leaves]);
+
+  const summaryMetrics = useMemo(() => {
+    const approved = leaves.filter((l) => l.status === 'Approved');
+    return {
+      pending: pendingCount,
+      approved: approved.length,
+      onLeave: new Set(approved.map((l) => l.employeeId)).size,
+      total: leaves.length,
+    };
+  }, [leaves, pendingCount]);
 
   const handleApprove = (leave) => {
     setLeaves((prev) =>
@@ -178,20 +182,12 @@ export default function Leave() {
         )}
       </div>
 
-      {/* Leave Balance Cards */}
+      {/* Leave Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {leaveBalances.map((b) => (
-          <Card key={b.type} className="overflow-hidden" hover>
-            <p className={`text-xs font-semibold uppercase tracking-wide ${b.text}`}>{b.type}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">
-              {b.remaining} <span className="text-sm font-normal text-gray-400">/ {b.total}</span>
-            </p>
-            <div className={`w-full h-1.5 rounded-full mt-3 ${b.barBg}`}>
-              <div className={`h-1.5 rounded-full transition-all duration-500 ${b.color}`} style={{ width: `${(b.remaining / b.total) * 100}%` }} />
-            </div>
-            <p className="text-xs text-gray-500 mt-1.5">{b.remaining === 0 ? 'All used' : `${b.remaining} days remaining`}</p>
-          </Card>
-        ))}
+        <KpiCard label="Pending Requests" value={summaryMetrics.pending} icon={Clock} accent="amber" />
+        <KpiCard label="Approved Requests" value={summaryMetrics.approved} icon={CheckCircle} accent="emerald" />
+        <KpiCard label="Employees on Leave" value={summaryMetrics.onLeave} icon={Users} accent="blue" />
+        <KpiCard label="Total Leave Requests" value={summaryMetrics.total} icon={FileText} accent="purple" />
       </div>
 
       {/* Tabs */}

@@ -11,7 +11,7 @@ export function generateConfidenceScore() {
   return Math.min(99, Math.round((95 + Math.random() * 4) * 10) / 10);
 }
 
-export function simulateFaceVerification({ signal, onStep, stepDuration = 450 } = {}) {
+export function simulateFaceVerification({ signal, onStep, stepDuration = 450, failureRate = 0.1 } = {}) {
   return new Promise((resolve) => {
     let currentStep = 0;
     let timeoutId;
@@ -33,12 +33,20 @@ export function simulateFaceVerification({ signal, onStep, stepDuration = 450 } 
     const complete = () => {
       clearTimeout(timeoutId);
       signal?.removeEventListener('abort', handleAbort);
-      resolve({
-        status: 'Verified',
-        confidence: generateConfidenceScore(),
-        liveness: 'Passed',
-        approval: 'Successful',
-      });
+      const failed = Math.random() < failureRate;
+      resolve(
+        failed
+          ? {
+              status: 'Failed',
+              reason: 'Face did not match the employee record. Please try again.',
+            }
+          : {
+              status: 'Verified',
+              confidence: generateConfidenceScore(),
+              liveness: 'Passed',
+              approval: 'Successful',
+            }
+      );
     };
 
     const tick = () => {

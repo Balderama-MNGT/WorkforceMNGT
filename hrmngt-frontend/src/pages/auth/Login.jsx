@@ -71,8 +71,8 @@ export default function Login() {
             <Briefcase className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg leading-tight tracking-tight">WorkForce</h1>
-            <p className="text-blue-300/60 text-xs font-medium">Pro Management</p>
+            <h1 className="font-bold text-lg leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
+            <p className="text-blue-300 text-xs font-medium uppercase tracking-[0.25em]">INCORPORATED</p>
           </div>
         </div>
 
@@ -86,7 +86,7 @@ export default function Login() {
           </p>
         </div>
 
-        <p className="relative text-slate-500 text-xs">&copy; {new Date().getFullYear()} WorkForce Pro Management. All rights reserved.</p>
+        <p className="relative text-slate-500 text-xs">&copy; {new Date().getFullYear()} ARCHON NELL INCORPORATED. All rights reserved.</p>
       </div>
 
       {/* Right form panel */}
@@ -98,8 +98,8 @@ export default function Login() {
               <Briefcase className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight">WorkForce</h1>
-              <p className="text-gray-400 text-[11px] font-medium">Pro Management</p>
+              <h1 className="font-bold text-[15px] leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
+              <p className="text-blue-400 text-[11px] font-medium uppercase tracking-[0.25em]">INCORPORATED</p>
             </div>
           </div>
 

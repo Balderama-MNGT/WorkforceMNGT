@@ -13,6 +13,7 @@ import EmployeeDashboard from './pages/dashboard/EmployeeDashboard';
 import Employees from './pages/employees/Employees';
 import EmployeeRegistration from './pages/employees/EmployeeRegistration';
 import Attendance from './pages/attendance/Attendance';
+import AttendanceTerminal from './pages/attendance/AttendanceTerminal';
 import Shifts from './pages/shifts/Shifts';
 import Timesheets from './pages/timesheets/Timesheets';
 import Leave from './pages/leave/Leave';
@@ -38,6 +39,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" replace /> : <ForgotPassword />} />
+      <Route path="/attendance-terminal" element={<AttendanceTerminal />} />
 
       <Route path="/" element={<PrivateLayout><HomeRoute /></PrivateLayout>} />
       <Route path="/employees" element={<PrivateLayout adminOnly><Employees /></PrivateLayout>} />

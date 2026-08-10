@@ -7,4 +7,5 @@ export const ATTENDANCE_CONFIG = {
   lunchEndTime: '13:00',
   lunchBreakHours: 1,
   location: 'Office',
+  terminalPin: '1234',
 };
