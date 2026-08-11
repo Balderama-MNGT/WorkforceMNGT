@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus, Users, Paperclip, X, Download, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus, Users, Paperclip, X, Download, ExternalLink, HeartPulse, CalendarCheck } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import KpiCard from '../../components/dashboard/KpiCard';
 import Button from '../../components/ui/Button';
@@ -251,8 +251,8 @@ export default function Leave() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
-          <p className="text-[14px] text-gray-500 mt-1">Manage employee leave requests and balances</p>
+          <h1 className="text-2xl font-bold text-gray-900">{isEmployee ? 'My Leave' : 'Leave Management'}</h1>
+          <p className="text-[14px] text-gray-500 mt-1">{isEmployee ? 'View your leave balance and request history' : 'Manage employee leave requests and balances'}</p>
         </div>
         {isEmployee && (
           <Button icon={Plus} onClick={() => setIsApplyOpen(true)}>
@@ -263,10 +263,21 @@ export default function Leave() {
 
       {/* Leave Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KpiCard label="Pending Requests" value={summaryMetrics.pending} icon={Clock} accent="amber" />
-        <KpiCard label="Approved Requests" value={summaryMetrics.approved} icon={CheckCircle} accent="emerald" />
-        <KpiCard label="Employees on Leave" value={summaryMetrics.onLeave} icon={Users} accent="blue" />
-        <KpiCard label="Total Leave Requests" value={summaryMetrics.total} icon={FileText} accent="purple" />
+        {isEmployee ? (
+          <>
+            <KpiCard label="Vacation Balance" value="12 days" subtext="15 days allocated" icon={Calendar} accent="blue" />
+            <KpiCard label="Sick Leave Balance" value="8 days" subtext="10 days allocated" icon={HeartPulse} accent="red" />
+            <KpiCard label="Pending Requests" value="2" subtext="Awaiting review" icon={Clock} accent="amber" />
+            <KpiCard label="Used This Year" value="13 days" subtext="of 25 days" icon={CalendarCheck} accent="purple" />
+          </>
+        ) : (
+          <>
+            <KpiCard label="Pending Requests" value={summaryMetrics.pending} icon={Clock} accent="amber" />
+            <KpiCard label="Approved Requests" value={summaryMetrics.approved} icon={CheckCircle} accent="emerald" />
+            <KpiCard label="Employees on Leave" value={summaryMetrics.onLeave} icon={Users} accent="blue" />
+            <KpiCard label="Total Leave Requests" value={summaryMetrics.total} icon={FileText} accent="purple" />
+          </>
+        )}
       </div>
 
       {/* Tabs */}
@@ -296,12 +307,14 @@ export default function Leave() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        <SearchBar
-          value={search}
-          onChange={(v) => { setSearch(v); setCurrentPage(1); }}
-          placeholder="Search by employee name..."
-          className="flex-1 min-w-[240px]"
-        />
+        {!isEmployee && (
+          <SearchBar
+            value={search}
+            onChange={(v) => { setSearch(v); setCurrentPage(1); }}
+            placeholder="Search by employee name..."
+            className="flex-1 min-w-[240px]"
+          />
+        )}
         <Select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} containerClass="w-40">
           {statuses.map((s) => (
             <option key={s} value={s}>{s === 'All' ? 'All Statuses' : s}</option>

@@ -7,6 +7,7 @@ const translations = {
     'nav.attendance': 'Time & Attendance',
     'nav.myAttendance': 'My Attendance',
     'nav.mySchedule': 'My Schedule',
+    'nav.myLeave': 'My Leave',
     'nav.shifts': 'Shift & Schedule',
     'nav.timesheets': 'Timesheet Management',
     'nav.leave': 'Leave Management',

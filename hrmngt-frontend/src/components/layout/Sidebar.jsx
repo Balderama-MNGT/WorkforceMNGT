@@ -58,7 +58,7 @@ const employeeMenuItems = [
   { path: '/', key: 'nav.dashboard', icon: LayoutDashboard },
   { path: '/my-attendance', key: 'nav.myAttendance', icon: Fingerprint },
   { path: '/my-schedule', key: 'nav.mySchedule', icon: CalendarClock },
-  { path: '/leave', key: 'nav.leave', icon: Calendar },
+  { path: '/leave', key: 'nav.myLeave', icon: Calendar },
   { path: '/my-timesheet', key: 'nav.timesheets', icon: FileClock },
   { path: '/settings', key: 'nav.settings', icon: Settings },
 ];
