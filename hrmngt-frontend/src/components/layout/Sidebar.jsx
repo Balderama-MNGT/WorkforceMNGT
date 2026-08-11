@@ -14,18 +14,43 @@ import { useRole } from '../../context/RoleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 
-const adminMenuItems = [
-  { path: '/', key: 'nav.dashboard', icon: LayoutDashboard },
-  { path: '/employees', key: 'nav.employees', icon: Users },
-  { path: '/employee-registration', key: 'nav.employeeRegistration', icon: UserPlus },
-  { path: '/attendance', key: 'nav.attendance', icon: Clock },
-  { path: '/shifts', key: 'nav.shifts', icon: CalendarDays },
-  { path: '/timesheets', key: 'nav.timesheets', icon: FileText },
-  { path: '/leave', key: 'nav.leave', icon: Calendar },
-  { path: '/analytics', key: 'nav.analytics', icon: BarChart3 },
-  { path: '/ai-decision-support', key: 'nav.aiDecisionSupport', icon: Brain },
-  { path: '/reports', key: 'nav.reports', icon: FileBarChart },
-  { path: '/settings', key: 'nav.settings', icon: Settings },
+const adminMenuGroups = [
+  {
+    label: 'nav.group.main',
+    items: [
+      { path: '/', key: 'nav.dashboard', icon: LayoutDashboard },
+      { path: '/employees', key: 'nav.employees', icon: Users },
+      { path: '/employee-registration', key: 'nav.employeeRegistration', icon: UserPlus },
+    ],
+  },
+  {
+    label: 'nav.group.attendance',
+    items: [
+      { path: '/attendance', key: 'nav.attendance', icon: Clock },
+      { path: '/shifts', key: 'nav.shifts', icon: CalendarDays },
+      { path: '/timesheets', key: 'nav.timesheets', icon: FileText },
+    ],
+  },
+  {
+    label: 'nav.group.leave',
+    items: [
+      { path: '/leave', key: 'nav.leave', icon: Calendar },
+    ],
+  },
+  {
+    label: 'nav.group.analytics',
+    items: [
+      { path: '/analytics', key: 'nav.analytics', icon: BarChart3 },
+      { path: '/ai-decision-support', key: 'nav.aiDecisionSupport', icon: Brain },
+      { path: '/reports', key: 'nav.reports', icon: FileBarChart },
+    ],
+  },
+  {
+    label: 'nav.group.system',
+    items: [
+      { path: '/settings', key: 'nav.settings', icon: Settings },
+    ],
+  },
 ];
 
 const employeeMenuItems = [
@@ -45,7 +70,30 @@ export default function Sidebar({ isOpen, onClose }) {
   const { t } = useLanguage();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const menuItems = currentRole === 'Employee' ? employeeMenuItems : adminMenuItems;
+
+  const renderNavItem = (item) => {
+    const isActive = location.pathname === item.path ||
+      (item.path !== '/' && location.pathname.startsWith(item.path));
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        onClick={onClose}
+        className={clsx(
+          'flex items-center gap-3 px-3.5 h-[44px] rounded-xl text-[13.5px] font-medium transition-all duration-200 group',
+          isActive
+            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/30'
+            : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
+        )}
+      >
+        <item.icon className={clsx(
+          'w-[18px] h-[18px] flex-shrink-0 transition-colors duration-200',
+          isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
+        )} />
+        <span className="truncate">{t(item.key)}</span>
+      </NavLink>
+    );
+  };
 
   const handleSignOut = () => {
     setShowLogoutModal(true);
@@ -87,31 +135,24 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-3 overflow-y-auto">
-          <div className="space-y-1">
-            {menuItems.map((item) => {
-              const isActive = location.pathname === item.path ||
-                (item.path !== '/' && location.pathname.startsWith(item.path));
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={onClose}
-                  className={clsx(
-                    'flex items-center gap-3 px-3.5 h-[44px] rounded-xl text-[13.5px] font-medium transition-all duration-200 group',
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/30'
-                      : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
-                  )}
-                >
-                  <item.icon className={clsx(
-                    'w-[18px] h-[18px] flex-shrink-0 transition-colors duration-200',
-                    isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
-                  )} />
-                  <span className="truncate">{t(item.key)}</span>
-                </NavLink>
-              );
-            })}
-          </div>
+          {currentRole === 'Employee' ? (
+            <div className="space-y-1">
+              {employeeMenuItems.map(renderNavItem)}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {adminMenuGroups.map((group) => (
+                <div key={group.label}>
+                  <div className="px-3.5 pt-5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+                    {t(group.label)}
+                  </div>
+                  <div className="space-y-1">
+                    {group.items.map(renderNavItem)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* User Profile - Fixed at bottom */}
