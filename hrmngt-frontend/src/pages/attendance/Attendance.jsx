@@ -147,7 +147,7 @@ export default function Attendance() {
                   <tr key={a.id || i} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <Avatar firstName={a.firstName} lastName={a.lastName} size="sm" src={a.avatar} />
+                        <Avatar firstName={a.firstName} lastName={a.lastName} size="sm" />
                         <div>
                           <p className="font-medium text-sm text-gray-900">{a.firstName} {a.lastName}</p>
                           <p className="text-xs text-gray-500">{a.department}</p>

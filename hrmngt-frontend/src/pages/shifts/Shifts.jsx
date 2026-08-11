@@ -296,7 +296,7 @@ export default function Shifts() {
                   <tr key={schedule.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-3">
-                        <Avatar firstName={emp?.firstName || ''} lastName={emp?.lastName || ''} size="sm" src={emp?.avatar} />
+                        <Avatar firstName={emp?.firstName || ''} lastName={emp?.lastName || ''} size="sm" />
                         <div>
                           <p className="font-medium text-sm text-gray-900">{empName}</p>
                           <p className="text-xs text-gray-500">{schedule.employeeId}</p>

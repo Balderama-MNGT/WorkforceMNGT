@@ -16,11 +16,11 @@ import { Pagination } from '../../components/ui/Table';
 import EmptyState from '../../components/ui/EmptyState';
 import { employeeService } from '../../services/api';
 import { formatDate } from '../../utils/helpers';
+import { DEPARTMENTS, POSITIONS, EMPLOYMENT_TYPES, EMPLOYMENT_STATUSES } from '../../utils/constants';
 import { useToast } from '../../context/ToastContext';
 
 const statusVariant = { Active: 'success', 'On Leave': 'warning', Inactive: 'danger' };
 
-const shifts = ['Morning', 'Afternoon', 'Night', 'Graveyard'];
 const genders = ['Male', 'Female'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -84,6 +84,11 @@ export default function Employees() {
   const types = ['All', 'Full-time', 'Part-time', 'Contract'];
   const statuses = ['All', 'Active', 'On Leave', 'Inactive'];
 
+  const editPositionOptions = useMemo(() => {
+    const current = formData.position;
+    return current && !POSITIONS.includes(current) ? [...POSITIONS, current] : POSITIONS;
+  }, [formData.position]);
+
   const stats = useMemo(() => ({
     total: employeesData.length,
     active: employeesData.filter(e => e.status === 'Active').length,
@@ -110,7 +115,11 @@ export default function Employees() {
   const openView = (emp) => { setSelectedEmployee(emp); setIsViewOpen(true); };
   const openEdit = (emp) => {
     setEditingEmployee(emp);
-    setFormData({ ...emp });
+    setFormData({
+      ...emp,
+      phone: emp.phone || emp.contactNumber || '',
+      hireDate: emp.hireDate || emp.dateHired || '',
+    });
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -150,6 +159,7 @@ export default function Employees() {
       } else if (!EMAIL_REGEX.test(formData.email)) {
         errs.email = 'Please enter a valid email address.';
       }
+      if (!formData.phone) errs.phone = 'Required';
       if (!formData.department) errs.department = 'Required';
       if (!formData.position) errs.position = 'Required';
     } else if (!formData.registeredEmployeeId) {
@@ -276,7 +286,7 @@ export default function Employees() {
               {paginated.map(emp => (
                 <Card key={emp.id} hover className="group">
                   <div className="flex items-start justify-between mb-3">
-                    <Avatar firstName={emp.firstName} lastName={emp.lastName} size="lg" src={emp.avatar} />
+                    <Avatar firstName={emp.firstName} lastName={emp.lastName} size="lg" />
                     <Badge variant={statusVariant[emp.status]} dot size="xs">{emp.status}</Badge>
                   </div>
                   <h3 className="font-semibold text-gray-900">{emp.firstName} {emp.lastName}</h3>
@@ -326,7 +336,7 @@ export default function Employees() {
                     <td className="px-4 py-3.5 text-sm font-medium text-gray-500">{emp.id}</td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <Avatar firstName={emp.firstName} lastName={emp.lastName} size="sm" src={emp.avatar} />
+                        <Avatar firstName={emp.firstName} lastName={emp.lastName} size="sm" />
                         <div>
                           <p className="font-medium text-sm text-gray-900">{emp.firstName} {emp.lastName}</p>
                           <p className="text-xs text-gray-500">{emp.email}</p>
@@ -364,35 +374,33 @@ export default function Employees() {
           {editingEmployee ? (
             <>
               <Input label="Employee ID" value={formData.id || ''} disabled />
-              <Input label="First Name" value={formData.firstName || ''} onChange={e => setFormData({ ...formData, firstName: e.target.value })} error={formErrors.firstName} placeholder="Enter first name" />
+              <Input label="First Name" required value={formData.firstName || ''} onChange={e => setFormData({ ...formData, firstName: e.target.value })} error={formErrors.firstName} placeholder="Enter first name" />
               <Input label="Middle Name" value={formData.middleName || ''} onChange={e => setFormData({ ...formData, middleName: e.target.value })} placeholder="Enter middle name" />
-              <Input label="Last Name" value={formData.lastName || ''} onChange={e => setFormData({ ...formData, lastName: e.target.value })} error={formErrors.lastName} placeholder="Enter last name" />
+              <Input label="Last Name" required value={formData.lastName || ''} onChange={e => setFormData({ ...formData, lastName: e.target.value })} error={formErrors.lastName} placeholder="Enter last name" />
+              <Input label="Email" type="email" required value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} error={formErrors.email} placeholder="email@company.com" />
+              <Input label="Phone Number" required value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: e.target.value })} error={formErrors.phone} placeholder="+63 9XX XXX XXXX" />
               <Input label="Date of Birth" type="date" value={formData.dateOfBirth || ''} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} />
               <Select label="Gender" value={formData.gender || ''} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
                 <option value="">Select gender</option>
                 {genders.map(g => <option key={g} value={g}>{g}</option>)}
               </Select>
-              <Input label="Contact Number" value={formData.contactNumber || ''} onChange={e => setFormData({ ...formData, contactNumber: e.target.value })} placeholder="+63 9XX XXX XXXX" />
-              <Input label="Email" type="email" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} error={formErrors.email} placeholder="email@company.com" />
-              <Select label="Department" value={formData.department || ''} onChange={e => setFormData({ ...formData, department: e.target.value })} error={formErrors.department}>
+              <Select label="Department" required value={formData.department || ''} onChange={e => setFormData({ ...formData, department: e.target.value })} error={formErrors.department}>
                 <option value="">Select Department</option>
-                {departments.filter(d => d !== 'All').map(d => <option key={d} value={d}>{d}</option>)}
+                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
               </Select>
-              <Input label="Position" value={formData.position || ''} onChange={e => setFormData({ ...formData, position: e.target.value })} error={formErrors.position} placeholder="Enter position" />
-              <Select label="Employment Type" value={formData.employmentType || ''} onChange={e => setFormData({ ...formData, employmentType: e.target.value })}>
-                {types.filter(t => t !== 'All').map(t => <option key={t} value={t}>{t}</option>)}
+              <Select label="Position" required value={formData.position || ''} onChange={e => setFormData({ ...formData, position: e.target.value })} error={formErrors.position}>
+                <option value="">Select Position</option>
+                {editPositionOptions.map(p => <option key={p} value={p}>{p}</option>)}
               </Select>
-              <Select label="Assigned Shift" value={formData.assignedShift || ''} onChange={e => setFormData({ ...formData, assignedShift: e.target.value })}>
-                <option value="">Select shift</option>
-                {shifts.map(s => <option key={s} value={s}>{s}</option>)}
+              <Select label="Employment Type" required value={formData.employmentType || ''} onChange={e => setFormData({ ...formData, employmentType: e.target.value })}>
+                <option value="">Select type</option>
+                {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </Select>
-              <Input label="Date Hired" type="date" value={formData.dateHired || formData.hireDate || ''} onChange={e => setFormData({ ...formData, dateHired: e.target.value })} />
+              <Input label="Date Hired" type="date" value={formData.hireDate || ''} onChange={e => setFormData({ ...formData, hireDate: e.target.value })} />
               <Select label="Status" value={formData.status || ''} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                <option value="Active">Active</option>
-                <option value="On Leave">On Leave</option>
-                <option value="Inactive">Inactive</option>
+                <option value="">Select status</option>
+                {EMPLOYMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </Select>
-              <Input label="Salary" type="number" value={formData.salary || ''} onChange={e => setFormData({ ...formData, salary: e.target.value })} placeholder="Annual salary" />
               <div className="md:col-span-2">
                 <Textarea label="Address" value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Enter full address" rows={2} />
               </div>
@@ -477,7 +485,7 @@ export default function Employees() {
         {selectedEmployee && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <Avatar firstName={selectedEmployee.firstName} lastName={selectedEmployee.lastName} size="2xl" src={selectedEmployee.avatar} />
+              <Avatar firstName={selectedEmployee.firstName} lastName={selectedEmployee.lastName} size="2xl" />
               <div>
                 <h3 className="text-xl font-bold text-gray-900">{selectedEmployee.firstName} {selectedEmployee.lastName}</h3>
                 <p className="text-xs text-gray-400">{selectedEmployee.id}</p>

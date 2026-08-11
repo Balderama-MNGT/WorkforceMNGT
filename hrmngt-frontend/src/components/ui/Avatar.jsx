@@ -21,13 +21,17 @@ const colors = [
 ];
 
 export default function Avatar({ src, firstName = '', lastName = '', size = 'md', className, online }) {
-  const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  const colorIndex = (firstName?.charCodeAt(0) || 0) % colors.length;
+  const first = firstName.trim();
+  const last = lastName.trim();
+  const initials = last
+    ? `${first[0] || ''}${last[0] || ''}`.toUpperCase()
+    : first.slice(0, 2).toUpperCase();
+  const colorIndex = (first.charCodeAt(0) || 0) % colors.length;
 
   return (
     <div className={clsx('relative inline-flex items-center justify-center rounded-full flex-shrink-0', sizeMap[size], className)}>
       {src ? (
-        <img src={src} alt={`${firstName} ${lastName}`} className="w-full h-full rounded-full object-cover" />
+        <img src={src} alt={`${first} ${last}`} className="w-full h-full rounded-full object-cover" />
       ) : (
         <div className={clsx('w-full h-full rounded-full flex items-center justify-center text-white font-semibold', colors[colorIndex])}>
           {initials}
