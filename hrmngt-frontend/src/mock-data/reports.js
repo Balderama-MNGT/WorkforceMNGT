@@ -96,7 +96,7 @@ export const reports = [
     description: "Tracks absenteeism trends over 12 months with flagged patterns and intervention suggestions.",
     lastGenerated: "2026-07-22T11:00:00.000Z",
     generatedBy: "Camille Ramos",
-    status: "pending"
+    status: "generating"
   },
   {
     id: "RPT012",

@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus, Users } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Calendar, CheckCircle, XCircle, Clock, FileText, Eye, Plus, Users, Paperclip, X, Download, ExternalLink } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import KpiCard from '../../components/dashboard/KpiCard';
 import Button from '../../components/ui/Button';
@@ -34,6 +34,17 @@ const leaveTypes = ['Vacation', 'Sick', 'Emergency', 'Special'];
 
 const ROWS_PER_PAGE = 8;
 
+const formatBytes = (bytes) => {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const docName = (doc) => (typeof doc === 'string' ? doc : (doc.name || 'document'));
+
+const docFile = (doc) => (typeof doc === 'string' ? null : (doc.file || null));
+
 export default function Leave() {
   const [employees, setEmployees] = useState([]);
   const { toast } = useToast();
@@ -61,8 +72,11 @@ export default function Leave() {
   const [selectedLeave, setSelectedLeave] = useState(null);
 
   const [isApplyOpen, setIsApplyOpen] = useState(false);
-  const [applyForm, setApplyForm] = useState({ leaveType: 'Vacation', startDate: '', endDate: '', reason: '' });
+  const [applyForm, setApplyForm] = useState({ leaveType: 'Vacation', startDate: '', endDate: '', reason: '', document: null });
   const [applyErrors, setApplyErrors] = useState({});
+  const fileInputRef = useRef(null);
+
+  const [viewDocLeave, setViewDocLeave] = useState(null);
 
   const statuses = ['All', 'Pending', 'Approved', 'Rejected'];
   const types = ['All', ...leaveTypes];
@@ -126,6 +140,63 @@ export default function Leave() {
     setIsDetailOpen(true);
   };
 
+  const openDocument = (leave) => {
+    setViewDocLeave(leave);
+  };
+
+  const openDocFile = (file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  const downloadDocFile = (file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name || 'supporting-document';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const validExt = /\.(pdf|jpe?g|png)$/i.test(file.name);
+    if (!allowedTypes.includes(file.type) || !validExt) {
+      setApplyErrors((er) => ({ ...er, document: 'Unsupported file type. Please attach a PDF, JPG, or PNG file.' }));
+      setApplyForm((f) => ({ ...f, document: null }));
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setApplyErrors((er) => ({ ...er, document: 'File is too large. Maximum size is 5 MB.' }));
+      setApplyForm((f) => ({ ...f, document: null }));
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setApplyErrors((er) => ({ ...er, document: undefined }));
+    setApplyForm((f) => ({ ...f, document: file }));
+  };
+
+  const removeDocument = () => {
+    setApplyForm((f) => ({ ...f, document: null }));
+    setApplyErrors((er) => ({ ...er, document: undefined }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const closeApply = () => {
+    setIsApplyOpen(false);
+    setApplyErrors({});
+    setApplyForm((f) => ({ ...f, document: null }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const validateApply = () => {
     const errs = {};
     if (!applyForm.startDate) errs.startDate = 'Start date is required';
@@ -152,11 +223,19 @@ export default function Leave() {
       appliedDate: new Date().toISOString().split('T')[0],
       approvedBy: null,
       comments: '',
-      documents: [],
+      documents: applyForm.document
+        ? [{
+            name: applyForm.document.name,
+            type: applyForm.document.type,
+            size: applyForm.document.size,
+            file: applyForm.document,
+          }]
+        : [],
     };
     setLeaves((prev) => [newLeave, ...prev]);
-    setApplyForm({ leaveType: 'Vacation', startDate: '', endDate: '', reason: '' });
+    setApplyForm({ leaveType: 'Vacation', startDate: '', endDate: '', reason: '', document: null });
     setApplyErrors({});
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setIsApplyOpen(false);
     toast.success('Leave Applied', 'Your leave request has been submitted for approval.');
   };
@@ -280,7 +359,18 @@ export default function Leave() {
                         {formatDate(leave.startDate)} {leave.startDate !== leave.endDate && `– ${formatDate(leave.endDate)}`}
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-gray-600 max-w-[200px] truncate">{leave.reason}</td>
+                    <td className="px-4 py-3.5 text-sm text-gray-600 max-w-[200px]">
+                      <div className="truncate">{leave.reason}</div>
+                      {leave.documents.length > 0 && (
+                        <button
+                          onClick={() => openDocument(leave)}
+                          className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          <Paperclip className="w-3 h-3" />
+                          Supporting Document
+                        </button>
+                      )}
+                    </td>
                     <td className="px-4 py-3.5">
                       <Badge variant={statusVariant[leave.status]} dot size="xs">{leave.status}</Badge>
                     </td>
@@ -349,10 +439,14 @@ export default function Leave() {
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Attached Documents</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedLeave.documents.map((doc) => (
-                    <div key={doc} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-700">
+                    <button
+                      key={docName(doc)}
+                      onClick={() => openDocument(selectedLeave)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    >
                       <FileText className="w-4 h-4 text-gray-400" />
-                      {doc}
-                    </div>
+                      {docName(doc)}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -442,7 +536,7 @@ export default function Leave() {
       </Modal>
 
       {/* Apply Leave Modal */}
-      <Modal isOpen={isApplyOpen} onClose={() => { setIsApplyOpen(false); setApplyErrors({}); }} title="Apply for Leave" size="md">
+      <Modal isOpen={isApplyOpen} onClose={closeApply} title="Apply for Leave" size="md">
         <div className="space-y-4">
           <Select
             label="Leave Type"
@@ -480,8 +574,52 @@ export default function Leave() {
             onChange={(e) => setApplyForm((f) => ({ ...f, reason: e.target.value }))}
             error={applyErrors.reason}
           />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-medium text-gray-700">Supporting Document</label>
+            <div className={applyErrors.document
+              ? 'relative w-full rounded-xl border border-dashed border-red-300 bg-red-50/30 transition-all duration-200'
+              : 'relative w-full rounded-xl border border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200'
+            }>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="sr-only"
+                id="leave-supporting-doc"
+                onChange={handleFileChange}
+              />
+              {applyForm.document ? (
+                <div className="flex items-center gap-3 px-3.5 py-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{applyForm.document.name}</p>
+                    <p className="text-xs text-gray-400">{applyForm.document.type || 'Document'} • {formatBytes(applyForm.document.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeDocument}
+                    title="Remove file"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label htmlFor="leave-supporting-doc" className="flex flex-col items-center justify-center cursor-pointer px-4 py-4">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Paperclip className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mt-1.5">Attach a document</p>
+                  <p className="text-xs text-gray-400 mt-0.5">PDF, JPG, or PNG • Max 5 MB</p>
+                </label>
+              )}
+            </div>
+            {applyErrors.document && <p className="text-xs text-red-500 font-medium">{applyErrors.document}</p>}
+          </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={() => { setIsApplyOpen(false); setApplyErrors({}); }}>
+            <Button variant="secondary" onClick={closeApply}>
               Cancel
             </Button>
             <Button icon={CheckCircle} onClick={handleApplyLeave}>
@@ -489,6 +627,60 @@ export default function Leave() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Supporting Document Viewer Modal */}
+      <Modal isOpen={viewDocLeave !== null} onClose={() => setViewDocLeave(null)} title="Supporting Document" size="sm">
+        {viewDocLeave && (
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              {viewDocLeave.employeeName} • {viewDocLeave.leaveType} Leave
+            </p>
+            {viewDocLeave.documents.length === 0 ? (
+              <p className="text-sm text-gray-400 py-2">No supporting document attached to this request.</p>
+            ) : (
+              viewDocLeave.documents.map((doc) => {
+                const file = docFile(doc);
+                return (
+                  <div key={docName(doc)} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{docName(doc)}</p>
+                      <p className="text-xs text-gray-400">
+                        {file ? `${file.type || 'Document'} • ${formatBytes(file.size)}` : 'Document attached'}
+                      </p>
+                    </div>
+                    {file ? (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => openDocFile(file)}
+                          title="Open document"
+                          className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => downloadDocFile(file)}
+                          title="Download document"
+                          className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-gray-400 flex-shrink-0">Preview unavailable</span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            {viewDocLeave.documents.some((doc) => typeof doc !== 'string' && !doc.file) && (
+              <p className="text-xs text-gray-400">Some documents attached before this session cannot be previewed.</p>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

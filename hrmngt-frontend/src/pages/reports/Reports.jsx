@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
-import { FileBarChart, FileText, Clock, Calendar, Users, TrendingUp, Download, Eye, RefreshCw, Filter, ChevronDown, Printer } from 'lucide-react';
+import { FileBarChart, FileText, Clock, Calendar, Users, TrendingUp, Download, Eye, RefreshCw, Filter, ChevronDown, Printer, User } from 'lucide-react';
 import Card, { CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Input';
+import SearchBar from '../../components/ui/SearchBar';
 import Modal from '../../components/ui/Modal';
 import reportsData from '../../mock-data/reports';
+import departments from '../../mock-data/departments';
 import { formatDate } from '../../utils/helpers';
 import { useToast } from '../../context/ToastContext';
 
@@ -49,9 +51,11 @@ const typeConfig = {
 
 const statusConfig = {
   ready: { variant: 'success', label: 'Ready' },
-  pending: { variant: 'warning', label: 'Pending' },
+  generating: { variant: 'warning', label: 'Generating' },
   failed: { variant: 'danger', label: 'Failed' },
 };
+
+const statusOptions = ['All', 'Ready', 'Generating', 'Failed'];
 
 const categories = [
   { key: 'all', label: 'All Reports' },
@@ -63,19 +67,24 @@ const categories = [
 ];
 
 const reportTypes = [
-  'Monthly Attendance Summary',
-  'Department Attendance Breakdown',
-  'Leave Utilization Report',
-  'Pending Leave Requests',
-  'Weekly Timesheet Summary',
-  'Overtime Analysis Report',
-  'Shift Coverage Report',
-  'Shift Swap History',
-  'Workforce Headcount Report',
-  'Employee Turnover Analysis',
-  'Absenteeism Trend Report',
-  'Payroll Discrepancy Report',
+  'Attendance Report',
+  'Leave Report',
+  'Timesheet Report',
+  'Shift & Schedule Report',
+  'Workforce Analytics Report',
+  'Overtime Report',
 ];
+
+const reportTypeKeys = {
+  'Attendance Report': 'attendance',
+  'Leave Report': 'leave',
+  'Timesheet Report': 'timesheet',
+  'Shift & Schedule Report': 'shift',
+  'Workforce Analytics Report': 'workforce_analytics',
+  'Overtime Report': 'timesheet',
+};
+
+const departmentOptions = departments.map((d) => d.name).sort();
 
 const mockPreviewData = [
   { employee: 'Juan Dela Cruz', department: 'Engineering', value: '92%' },
@@ -88,7 +97,12 @@ const mockPreviewData = [
 export default function Reports() {
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [reports] = useState(reportsData);
+  const [reports, setReports] = useState(reportsData);
+
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewReport, setPreviewReport] = useState(null);
@@ -98,20 +112,31 @@ export default function Reports() {
     reportType: '',
     startDate: '',
     endDate: '',
+    department: 'all',
     format: 'pdf',
   });
   const [generateErrors, setGenerateErrors] = useState({});
 
   const filteredReports = useMemo(() => {
-    if (activeCategory === 'all') return reports;
-    return reports.filter((r) => r.type === activeCategory);
-  }, [reports, activeCategory]);
+    return reports.filter((r) => {
+      if (activeCategory !== 'all' && r.type !== activeCategory) return false;
+      if (statusFilter !== 'All' && r.status !== statusFilter.toLowerCase()) return false;
+      if (search && !r.name.toLowerCase().includes(search.toLowerCase())) return false;
+      const reportDate = new Date(r.lastGenerated).toISOString().slice(0, 10);
+      if (dateFrom && reportDate < dateFrom) return false;
+      if (dateTo && reportDate > dateTo) return false;
+      return true;
+    });
+  }, [reports, activeCategory, statusFilter, search, dateFrom, dateTo]);
 
   const totalReports = reports.length;
   const readyCount = reports.filter((r) => r.status === 'ready').length;
-  const lastGeneratedDate = useMemo(() => {
-    const dates = reports.map((r) => new Date(r.lastGenerated));
-    return dates.length > 0 ? new Date(Math.max(...dates)) : null;
+  const thisMonthCount = useMemo(() => {
+    const now = new Date();
+    return reports.filter((r) => {
+      const d = new Date(r.lastGenerated);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
   }, [reports]);
 
   const openPreview = (report) => {
@@ -132,15 +157,56 @@ export default function Reports() {
     if (generateForm.startDate && generateForm.endDate && generateForm.endDate < generateForm.startDate) {
       errors.endDate = 'End date cannot be before start date';
     }
+    if (!generateForm.format) errors.format = 'Export format is required';
     setGenerateErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleGenerateSubmit = () => {
     if (!validateGenerate()) return;
-    toast.success('Report Queued', `Your "${generateForm.reportType}" report is being generated.`);
-    setGenerateForm({ reportType: '', startDate: '', endDate: '', format: 'pdf' });
+    const departmentLabel = generateForm.department === 'all' ? 'All Departments' : generateForm.department;
+    const newReport = {
+      id: `RPT${String(reports.length + 1).padStart(3, '0')}`,
+      name: generateForm.reportType,
+      type: reportTypeKeys[generateForm.reportType] || 'attendance',
+      description: `${departmentLabel} ${generateForm.reportType.toLowerCase()} covering ${formatDate(generateForm.startDate)} to ${formatDate(generateForm.endDate)}.`,
+      lastGenerated: new Date().toISOString(),
+      generatedBy: 'System',
+      status: 'ready',
+      reportType: generateForm.reportType,
+      startDate: generateForm.startDate,
+      endDate: generateForm.endDate,
+      department: generateForm.department,
+      exportFormat: generateForm.format,
+      generatedDate: new Date().toISOString(),
+    };
+    setReports((prev) => [newReport, ...prev]);
+    toast.success('Report Generated', `Your "${generateForm.reportType}" has been generated.`);
+    setGenerateForm({ reportType: '', startDate: '', endDate: '', department: 'all', format: 'pdf' });
+    setGenerateErrors({});
     setIsGenerateOpen(false);
+  };
+
+  const closeGenerate = () => {
+    setIsGenerateOpen(false);
+    setGenerateErrors({});
+  };
+
+  const handleRegenerate = (report) => {
+    setReports((prev) =>
+      prev.map((r) => (r.id === report.id ? { ...r, status: 'generating' } : r))
+    );
+    toast.info('Regenerating', `${report.name} is being regenerated.`);
+    setTimeout(() => {
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === report.id
+            ? { ...r, status: 'ready', lastGenerated: new Date().toISOString() }
+            : r
+        )
+      );
+      toast.success('Report Regenerated', `${report.name} is ready to download.`);
+    }, 2000);
   };
 
   const categoryCounts = useMemo(() => {
@@ -191,13 +257,11 @@ export default function Reports() {
         <Card hover>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-amber-600" />
+              <Calendar className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Last Generated</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {lastGeneratedDate ? formatDate(lastGeneratedDate.toISOString()) : '-'}
-              </p>
+              <p className="text-sm font-medium text-gray-500">Reports This Month</p>
+              <p className="text-2xl font-bold text-gray-900">{thisMonthCount}</p>
             </div>
           </div>
         </Card>
@@ -230,6 +294,42 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* Search & Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search reports..."
+          className="flex-1 min-w-[220px]"
+        />
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            title="From date"
+            className="px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 hover:border-gray-300"
+          />
+          <span className="text-gray-400 text-sm">–</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            title="To date"
+            className="px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 hover:border-gray-300"
+          />
+        </div>
+        <Select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          containerClass="w-40"
+        >
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>{s === 'All' ? 'All Statuses' : s}</option>
+          ))}
+        </Select>
+      </div>
+
       {/* Report Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {filteredReports.map((report) => {
@@ -254,12 +354,15 @@ export default function Reports() {
                   <Badge variant={status.variant} dot size="xs">{status.label}</Badge>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex flex-col gap-1.5 text-xs text-gray-500">
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{formatDate(report.lastGenerated)}</span>
+                    <span>Generated: <span className="text-gray-700 font-medium">{formatDate(report.lastGenerated)}</span></span>
                   </div>
-                  <span>by {report.generatedBy}</span>
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    <span>Generated by: <span className="text-gray-700 font-medium">{report.generatedBy}</span></span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -285,7 +388,7 @@ export default function Reports() {
                     variant="ghost"
                     size="xs"
                     icon={RefreshCw}
-                    onClick={() => toast.info('Regenerating', `${report.name} is being regenerated.`)}
+                    onClick={() => handleRegenerate(report)}
                   >
                     Regenerate
                   </Button>
@@ -298,8 +401,22 @@ export default function Reports() {
 
       {filteredReports.length === 0 && (
         <Card className="text-center py-12">
-          <Filter className="w-10 h-10 text-gray-300 mx-auto" />
-          <p className="text-gray-500 mt-3 text-sm">No reports found in this category.</p>
+          {reports.length === 0 ? (
+            <>
+              <FileBarChart className="w-10 h-10 text-gray-300 mx-auto" />
+              <p className="text-gray-700 mt-3 text-sm font-medium">No reports available</p>
+              <p className="text-gray-400 mt-1 text-sm">Generate a report to see it here.</p>
+              <Button icon={FileBarChart} className="mt-4" onClick={() => setIsGenerateOpen(true)}>
+                Generate Report
+              </Button>
+            </>
+          ) : (
+            <>
+              <Filter className="w-10 h-10 text-gray-300 mx-auto" />
+              <p className="text-gray-700 mt-3 text-sm font-medium">No reports found</p>
+              <p className="text-gray-400 mt-1 text-sm">Try changing your search or filters.</p>
+            </>
+          )}
         </Card>
       )}
 
@@ -373,7 +490,7 @@ export default function Reports() {
       {/* Generate Report Modal */}
       <Modal
         isOpen={isGenerateOpen}
-        onClose={() => setIsGenerateOpen(false)}
+        onClose={closeGenerate}
         title="Generate New Report"
         size="md"
       >
@@ -417,10 +534,25 @@ export default function Reports() {
             </div>
           </div>
 
+          {generateForm.reportType !== 'Workforce Analytics Report' && (
+            <Select
+              label="Department"
+              value={generateForm.department}
+              onChange={(e) => handleGenerateChange('department', e.target.value)}
+              error={generateErrors.department}
+            >
+              <option value="all">All Departments</option>
+              {departmentOptions.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </Select>
+          )}
+
           <Select
             label="Export Format"
             value={generateForm.format}
             onChange={(e) => handleGenerateChange('format', e.target.value)}
+            error={generateErrors.format}
           >
             <option value="pdf">PDF</option>
             <option value="excel">Excel</option>
@@ -428,7 +560,7 @@ export default function Reports() {
           </Select>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <Button variant="outline" onClick={() => setIsGenerateOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={closeGenerate}>Cancel</Button>
             <Button icon={FileBarChart} onClick={handleGenerateSubmit}>Generate</Button>
           </div>
         </div>
