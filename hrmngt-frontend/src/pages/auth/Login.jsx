@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Briefcase, Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, UserRound } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, UserRound } from 'lucide-react';
+import BrandLogo from '../../components/ui/BrandLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Button from '../../components/ui/Button';
@@ -67,9 +68,7 @@ export default function Login() {
           }}
         />
         <div className="relative flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Briefcase className="w-6 h-6 text-white" />
-          </div>
+          <BrandLogo variant="large" />
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
             <p className="text-blue-300 text-xs font-medium uppercase tracking-[0.25em]">INCORPORATED</p>
@@ -94,9 +93,7 @@ export default function Login() {
         <div className="w-full max-w-[400px]">
           {/* Mobile-only logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
+            <BrandLogo variant="icon" />
             <div>
               <h1 className="font-bold text-[15px] leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
               <p className="text-blue-400 text-[11px] font-medium uppercase tracking-[0.25em]">INCORPORATED</p>

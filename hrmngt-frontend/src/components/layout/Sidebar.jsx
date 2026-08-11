@@ -3,11 +3,12 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Clock, Calendar, FileText,
   CalendarDays, BarChart3, FileBarChart, Settings,
-  Briefcase, LogOut, AlertTriangle, Fingerprint, CalendarClock, FileClock,
+  LogOut, AlertTriangle, Fingerprint, CalendarClock, FileClock,
   UserPlus, Brain
 } from 'lucide-react';
 import clsx from 'clsx';
 import Avatar from '../ui/Avatar';
+import BrandLogo from '../ui/BrandLogo';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { useRole } from '../../context/RoleContext';
@@ -124,9 +125,7 @@ export default function Sidebar({ isOpen, onClose }) {
       >
         {/* Logo */}
         <div className="px-6 h-[72px] flex items-center gap-3 flex-shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Briefcase className="w-5 h-5 text-white" />
-          </div>
+          <BrandLogo variant="icon" />
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
             <p className="text-blue-300 text-[11px] font-medium uppercase tracking-[0.25em]">INCORPORATED</p>

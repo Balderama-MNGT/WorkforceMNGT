@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import {
-  Briefcase, ScanFace, LogIn, LogOut, CheckCircle2, Loader2,
+  ScanFace, LogIn, LogOut, CheckCircle2, Loader2,
   ChevronRight, ArrowLeft, UserCheck, Clock, CalendarDays,
   Lock, Delete, BadgeCheck,
 } from 'lucide-react';
+import BrandLogo from '../../components/ui/BrandLogo';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Avatar from '../../components/ui/Avatar';
@@ -213,9 +214,7 @@ export default function AttendanceTerminal() {
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 lg:px-10 py-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Briefcase className="w-5 h-5 text-white" />
-          </div>
+          <BrandLogo variant="icon" />
           <div>
             <h1 className="font-bold text-xl leading-tight tracking-tight uppercase text-red-500">ARCHON NELL</h1>
             <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-blue-300">INCORPORATED</p>
